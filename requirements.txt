@@ -1,0 +1,6 @@
+flask
+os
+cv2
+ultralytics
+numpy
+YOLOv8

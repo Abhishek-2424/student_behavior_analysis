@@ -1,0 +1,13 @@
+train: /content/drive/MyDrive/Studentanalysis.v1i.yolov8/train
+val: /content/drive/MyDrive/Studentanalysis.v1i.yolov8/valid
+test: /content/drive/MyDrive/Studentanalysis.v1i.yolov8/test
+
+nc: 8
+names: ['laptop', 'laughing', 'looking away', 'mobile phone', 'reading', 'sleeping', 'using laptop', 'writing']
+
+roboflow:
+  workspace: emotion-detection-woffv
+  project: student-analysis
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/emotion-detection-woffv/student-analysis/dataset/1
