@@ -2,7 +2,7 @@ import cv2
 from ultralytics import YOLO
 
 # Load the trained YOLOv8 model
-model = YOLO('models/best(3).pt')
+model = YOLO('models/best(4).pt')
 
 # For image
 image_path = 'data/images/classroom.jpg'

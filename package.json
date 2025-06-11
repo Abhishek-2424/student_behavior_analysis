@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "flask": "^0.2.10",
+    "ultralytics": "^1.0.0"
+  }
+}

@@ -1,83 +1,394 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Student Behavior Detection</title>
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+    <style>
+      body {
+        font-family: 'Poppins', sans-serif;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
 
+      .main-container {
+        flex: 1;
+        padding: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .sections-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+        margin-bottom: 2rem;
+      }
+
+      .section-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .card-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .upload-zone {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 200px;
+        border: 2px dashed #4CAF50;
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .upload-zone:hover {
+        border-color: #45a049;
+        background-color: rgba(76, 175, 80, 0.1);
+      }
+
+      .video-wrapper {
+        aspect-ratio: 16 / 9;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        position: relative;
+      }
+
+      video, canvas {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .behavior-stats {
+        margin-top: 1rem;
+      }
+
+      .output-section {
+        grid-column: 1 / -1;
+        margin-top: 2rem;
+      }
+
+      @media (max-width: 768px) {
+        .sections-container {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      #behaviorList {
+        list-style-type: none;
+        padding: 0;
+      }
+
+      #behaviorList li {
+        margin: 5px 0;
+        padding: 5px;
+        background-color: #f0f0f0;
+        border-radius: 3px;
+      }
+
+      #excelDownload {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+      }
+
+      #excelDownload:hover {
+        background-color: #45a049;
+      }
+    </style>
+  </head>
+  <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">Student Behavior Detection</a>
-        </div>
+      <div class="container-fluid d-flex justify-content-center">
+        <a class="navbar-brand text-center" href="#">
+          <i class="fas fa-brain glow-icon"></i>
+          Student Behavior Detection
+        </a>
+      </div>
     </nav>
 
-    <!-- Main Content Wrapper -->
-    <div class="container">
+    <!-- Main Content -->
+    <div class="main-container">
+      <div class="sections-container">
         <!-- File Upload Section -->
-        <div class="card">
-            <div class="card-header">
-                <h4>Upload Image or Video</h4>
+        <div class="card glass-card section-card">
+          <div class="card-header">
+            <h4><i class="fas fa-upload glow-icon"></i> Upload Image or Video</h4>
+          </div>
+          <div class="card-body">
+            <form action="/upload" method="POST" enctype="multipart/form-data" id="uploadForm">
+              <div class="file-upload">
+                <div class="upload-zone" id="dropZone">
+                  <i class="fas fa-cloud-upload-alt upload-icon fa-3x mb-3"></i>
+                  <p class="mb-2">Drag and drop your file here or click to browse</p>
+                  <p class="selected-file-name text-muted small"></p>
+                  <input
+                    type="file"
+                    id="file-upload"
+                    name="file"
+                    accept="image/*,video/*"
+                    required
+                    style="display: none;"
+                  />
+                </div>
+                <button type="submit" class="btn btn-primary neon-btn w-100">
+                  <i class="fas fa-rocket"></i> Process File
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Real-time Detection Section -->
+        <div class="card glass-card section-card">
+          <div class="card-header">
+            <h4><i class="fas fa-camera glow-icon"></i> Real-time Detection</h4>
+          </div>
+          <div class="card-body">
+            <div class="camera-selection mb-3">
+              <label for="cameraSelect" class="form-label">Select Camera</label>
+              <select id="cameraSelect" class="form-select">
+                <option value="">Loading cameras...</option>
+              </select>
             </div>
-            <div class="card-body">
-                <form action="/upload" method="POST" enctype="multipart/form-data">
-                    <div class="file-upload">
-                        <label for="file-upload">Choose a file to upload:</label>
-                        <input type="file" id="file-upload" name="file" accept="image/*,video/*" title="Choose a file to upload" required>
-                        <button type="submit" class="btn">Upload</button>
-                    </div>
-                </form>
+            <div id="realtime-container">
+              <div class="video-wrapper">
+                <video id="webcam" autoplay playsinline style="display: none;"></video>
+                <canvas id="display-canvas"></canvas>
+                <canvas id="output-canvas" style="display: none;"></canvas>
+              </div>
+              <div class="capture-options mt-3">
+                <button type="button" class="btn btn-primary neon-btn w-100 mb-2" id="startButton" disabled>
+                  <i class="fas fa-video"></i> Start Real-time Detection
+                </button>
+                <button type="button" class="btn btn-danger neon-btn w-100" id="stopButton" style="display: none;">
+                  <i class="fas fa-stop"></i> Stop Detection
+                </button>
+              </div>
+              <div id="realtime-behaviors" class="behavior-stats mt-3"></div>
             </div>
+          </div>
         </div>
 
         <!-- Output Section -->
-        <div class="output-section">
-            {% if image_url %}
-            <div class="card">
-                <div class="card-header">
-                    <h4>Processed Image</h4>
+        <div class="output-section" id="processed-section">
+          {% if image_url and show_processed %}
+          <div class="card glass-card">
+            <div class="card-header">
+              <h4><i class="fas fa-image glow-icon"></i> Processed Image</h4>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-8">
+                  <img src="{{ image_url }}" alt="Processed Image" class="img-fluid rounded">
                 </div>
-                <div class="card-body text-center">
-                    <img src="{{ image_url }}" alt="{{ filename }}">
+                <div class="col-md-4">
+                  <div class="behavior-stats">
+                    <h5 class="glow-text">Detected Objects</h5>
                     <ul class="behavior-list">
-                        {% for behavior, count in behaviors.items() %}
-                        <li>{{ behavior }}: <span class="badge">{{ count }}</span></li>
-                        {% endfor %}
+                      {% for behavior, count in behaviors.items() %}
+                        {% if behavior in ['laptop', 'mobile phone'] and count > 0 %}
+                        <li class="behavior-item">
+                          <span class="behavior-name">{{ behavior }}</span>
+                          <span class="badge neon-badge">{{ count }}</span>
+                        </li>
+                        {% endif %}
+                      {% endfor %}
                     </ul>
-                    <a href="{{ download_url }}" class="btn">Download Processed Image</a>
+                    
+                    <h5 class="glow-text mt-4">Detected Behaviors</h5>
+                    <ul class="behavior-list">
+                      {% for behavior, count in behaviors.items() %}
+                        {% if behavior not in ['laptop', 'mobile phone'] and count > 0 %}
+                        <li class="behavior-item">
+                          <span class="behavior-name">{{ behavior }}</span>
+                          <span class="badge neon-badge">{{ count }}</span>
+                        </li>
+                        {% endif %}
+                      {% endfor %}
+                    </ul>
+                  </div>
+                  <div class="mt-3">
+                    <a href="{{ download_url }}" class="btn btn-secondary neon-btn w-100 mb-2">
+                      <i class="fas fa-download"></i> Download Result
+                    </a>
+                    {% if excel_url %}
+                    <a href="{{ excel_url }}" class="btn btn-success neon-btn w-100">
+                      <i class="fas fa-file-excel"></i> Download Excel Report
+                    </a>
+                    {% endif %}
+                  </div>
                 </div>
+              </div>
             </div>
-            {% endif %}
-
-            {% if video_url %}
-            <div class="card">
-                <div class="card-header">
-                    <h4>Processed Video</h4>
-                </div>
-                <div class="card-body text-center">
-                    <video controls>
-                        <source src="{{ video_url }}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                    <a href="{{ download_url }}" class="btn">Download Processed Video</a>
-                </div>
+          </div>
+          {% endif %}
+          
+          {% if video_url and show_processed %}
+          <div class="card glass-card mt-4">
+            <div class="card-header">
+              <h4><i class="fas fa-video glow-icon"></i> Processed Video</h4>
             </div>
-            {% endif %}
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-8">
+                  <video controls class="w-100 rounded">
+                    <source src="{{ video_url }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+                <div class="col-md-4">
+                  <div class="behavior-stats">
+                    <h5 class="glow-text">Detected Objects</h5>
+                    <ul class="behavior-list">
+                      {% for behavior, count in behaviors.items() %}
+                        {% if behavior in ['laptop', 'mobile phone'] and count > 0 %}
+                        <li class="behavior-item">
+                          <span class="behavior-name">{{ behavior }}</span>
+                          <span class="badge neon-badge">{{ count }}</span>
+                        </li>
+                        {% endif %}
+                      {% endfor %}
+                    </ul>
+                    
+                    <h5 class="glow-text mt-4">Detected Behaviors</h5>
+                    <ul class="behavior-list">
+                      {% for behavior, count in behaviors.items() %}
+                        {% if behavior not in ['laptop', 'mobile phone'] and count > 0 %}
+                        <li class="behavior-item">
+                          <span class="behavior-name">{{ behavior }}</span>
+                          <span class="badge neon-badge">{{ count }}</span>
+                        </li>
+                        {% endif %}
+                      {% endfor %}
+                    </ul>
+                  </div>
+                  <div class="mt-3">
+                    <a href="{{ download_url }}" class="btn btn-secondary neon-btn w-100 mb-2">
+                      <i class="fas fa-download"></i> Download Result
+                    </a>
+                    {% if excel_url %}
+                    <a href="{{ excel_url }}" class="btn btn-success neon-btn w-100">
+                      <i class="fas fa-file-excel"></i> Download Excel Report
+                    </a>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
         </div>
+      </div>
     </div>
 
     <!-- Footer -->
-    <footer>
-        <p>&copy; 2025 Student Behavior Detection. All rights reserved.</p>
+    <footer class="text-center py-3">
+      <p class="mb-0">
+        © 2025 Student Behavior Detection | <i class="fas fa-code"></i> with
+        <i class="fas fa-heart glow-icon"></i>
+      </p>
     </footer>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+
+    <!-- Custom JS -->
+    <script>
+      // File upload handling
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('file-upload');
+      const fileNameDisplay = document.querySelector('.selected-file-name');
+
+      // Click to browse
+      dropZone.addEventListener('click', () => {
+        fileInput.click();
+      });
+
+      // File input change
+      fileInput.addEventListener('change', function() {
+        const fileName = this.files[0]?.name || '';
+        fileNameDisplay.textContent = fileName;
+      });
+
+      // Drag and drop
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+      });
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+      });
+
+      function highlight() {
+        dropZone.classList.add('border-primary');
+      }
+
+      function unhighlight() {
+        dropZone.classList.remove('border-primary');
+      }
+
+      dropZone.addEventListener('drop', handleDrop, false);
+
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+        fileNameDisplay.textContent = files[0]?.name || '';
+      }
+    </script>
+
+    <!-- Load realtime.js -->
+    <script src="{{ url_for('static', filename='js/realtime.js') }}"></script>
+  </body>
 </html>
